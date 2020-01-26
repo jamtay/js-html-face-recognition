@@ -53,15 +53,21 @@ video.addEventListener('play', async () => {
   }, 1000)
 })
 
+//TODO: improve this to not need to know the name of each directory (will need a server for this)
 function loadLabeledImages() {
   const labels = ['Black Widow', 'Captain America', 'Jim Rhodes', 'Thor', 'Tony Stark', 'James Taylor']
   return Promise.all(
     labels.map(async label => {
       const descriptions = []
-      for (let i = 1; i <= 2; i++) {
-        const img = await faceapi.fetchImage(`/labeled_images/${label}/${i}.jpg`)
-        const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
-        descriptions.push(detections.descriptor)
+      // Crude way to allow different amount of images in each folder. Loop until a 404
+      for (let i = 1; ;i++) {
+        try {
+          const img = await faceapi.fetchImage(`/labeled_images/${label}/${i}.jpg`)
+          const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
+          descriptions.push(detections.descriptor)
+        } catch (e) {
+          break;
+        }
       }
 
       return new faceapi.LabeledFaceDescriptors(label, descriptions)
